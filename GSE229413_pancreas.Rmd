@@ -1,0 +1,168 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(Seurat)
+#library(tidyverse)
+
+# Find all extracted .h5 files
+#GSM7162998 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7162998_3829-EC_filtered_feature_bc_matrix.h5")
+GSM7162999 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7162999_3861-EC_filtered_feature_bc_matrix.h5")
+#GSM7163000 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163000_3862-EC_filtered_feature_bc_matrix.h5")
+GSM7163001 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163001_4160-EC_filtered_feature_bc_matrix.h5")
+#GSM7163002 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163002_4161-EC_filtered_feature_bc_matrix.h5")
+GSM7163003 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163003_4346-EC_filtered_feature_bc_matrix.h5")
+#GSM7163004 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163004_4347-EC_filtered_feature_bc_matrix.h5")
+GSM7163005 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163005_4450-EC_filtered_feature_bc_matrix.h5")
+#GSM7163006 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163006_4451-EC_filtered_feature_bc_matrix.h5")
+GSM7163007 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163007_4637-EC1_filtered_feature_bc_matrix.h5")
+#GSM7163008 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163008_4637-EC2_filtered_feature_bc_matrix.h5")
+GSM7163009 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163009_4741-EC1_filtered_feature_bc_matrix.h5")
+#GSM7163010 <- Read10X_h5("/Users/mdqudratullah/Downloads/GSE229413_RAW/GSM7163010_4741-EC2_filtered_feature_bc_matrix.h5")
+
+# Create Seurat object
+#obj1 <- CreateSeuratObject(counts = GSM7162998, project = "GSM7162998", min.cells = 3, min.features = 200)
+obj2 <- CreateSeuratObject(counts = GSM7162999, project = "GSM7162999", min.cells = 3, min.features = 200)
+#obj3 <- CreateSeuratObject(counts = GSM7163000, project = "GSM7162300", min.cells = 3, min.features = 200)
+obj4 <- CreateSeuratObject(counts = GSM7163001, project = "GSM7163001", min.cells = 3, min.features = 200)
+#obj5 <- CreateSeuratObject(counts = GSM7163002, project = "GSM7163002", min.cells = 3, min.features = 200)
+obj6 <- CreateSeuratObject(counts = GSM7163003, project = "GSM7163003", min.cells = 3, min.features = 200)
+#obj7 <- CreateSeuratObject(counts = GSM7163004, project = "GSM7163004", min.cells = 3, min.features = 200)
+obj8 <- CreateSeuratObject(counts = GSM7163005, project = "GSM7163005", min.cells = 3, min.features = 200)
+#obj9 <- CreateSeuratObject(counts = GSM7163006, project = "GSM7163006", min.cells = 3, min.features = 200)
+obj10 <- CreateSeuratObject(counts = GSM7163007, project = "GSM7163007", min.cells = 3, min.features = 200)
+#obj11 <- CreateSeuratObject(counts = GSM7163008, project = "GSM7163008", min.cells = 3, min.features = 200)
+obj12 <- CreateSeuratObject(counts = GSM7163009, project = "GSM7163009", min.cells = 3, min.features = 200)
+#obj13 <- CreateSeuratObject(counts = GSM7163010, project = "GSM7163010", min.cells = 3, min.features = 200)
+
+#obj1$sample_id <- "head_n_tail"
+obj2$sample_id <- "GSM7162999"
+#obj3$sample_id <- "tail"
+obj4$sample_id <- "GSM7163001"
+#obj5$sample_id <- "tail"
+obj6$sample_id <- "GSM7163003"
+#obj7$sample_id <- "tail"
+obj8$sample_id <- "GSM7163005"
+#obj9$sample_id <- "tail"
+obj10$sample_id <- "GSM7163007"
+#obj11$sample_id <- "tail"
+obj12$sample_id <- "GSM7163009"
+#obj13$sample_id <- "tail"
+```
+
+```{r}
+# 2. Function for QC + scDblFinder (applied to each sample)
+process_sample <- function(obj) {
+  # Mitochondrial percentage
+  obj[["percent.mt"]] <- PercentageFeatureSet(obj, pattern = "^MT-")
+  
+  # QC filtering
+  obj <- subset(obj, subset = nFeature_RNA > 200 & 
+                              nFeature_RNA < 5000 & 
+                              percent.mt < 15)
+  
+  # ----- scDblFinder -----
+  sce <- as.SingleCellExperiment(obj)
+  sce <- scDblFinder(sce)
+  
+  obj$doublet_score <- sce$scDblFinder.score
+  obj$doublet_class <- sce$scDblFinder.class
+  
+  # Keep only singlets
+  obj <- subset(obj, subset = doublet_class == "singlet")
+  
+  message(obj$sample_id[1], ": ", ncol(obj), " cells remaining after doublet removal")
+  
+  return(obj)
+}
+
+# Apply to all samples
+#obj1 <- process_sample(obj1)
+obj2 <- process_sample(obj2)
+#obj3 <- process_sample(obj3)
+obj4 <- process_sample(obj4)
+#obj5 <- process_sample(obj5)
+obj6 <- process_sample(obj6)
+#obj7 <- process_sample(obj7)
+obj8 <- process_sample(obj8)
+#obj9 <- process_sample(obj9)
+obj10 <- process_sample(obj10)
+#obj11 <- process_sample(obj11)
+obj12 <- process_sample(obj12)
+#obj13 <- process_sample(obj13)
+
+# 3. Create a named list and merge
+sample_list <- list(S2  = obj2,S4  = obj4,S6  = obj6,S8  = obj8,S10 = obj10,S12 = obj12)
+# Merge using the named list (Seurat automatically uses list names for cell prefixes)
+combined <- merge(x = sample_list[[1]], y = sample_list[-1], add.cell.ids = names(sample_list))
+
+combined <- JoinLayers(combined)
+# Verify cell counts per sample
+table(combined$sample_id)
+```
+
+```{r}
+# 4. Normalization + Clustering
+combined <- NormalizeData(combined)
+combined <- FindVariableFeatures(combined, nfeatures = 3000)
+combined <- ScaleData(combined)
+combined <- RunPCA(combined, npcs = 50)
+ElbowPlot(combined, ndims = 50)
+combined <- FindNeighbors(combined, dims = 1:30)
+combined <- FindClusters(combined, resolution = 0.5)
+combined <- RunUMAP(combined, dims = 1:30, reduction.name = "unintegrated_UMAP")
+```
+
+
+```{r}
+# Quick look
+DimPlot(combined, reduction = "unintegrated_UMAP", group.by = "sample_id")
+DimPlot(combined, reduction = "unintegrated_UMAP", label = TRUE)
+```
+
+```{r}
+combined[["RNA"]] <- split(combined[["RNA"]], f = combined$sample_id)
+combined <- IntegrateLayers(
+  object = combined,
+  method = RPCAIntegration,
+  orig.reduction = "pca",
+  new.reduction = "integrated.rpca",
+  normalization.method = "LogNormalize",
+  verbose = TRUE)
+combined <- FindNeighbors(combined, reduction = "integrated.rpca", dims = 1:30)
+combined <- FindClusters(combined, resolution = 0.5)
+combined <- RunUMAP(combined, reduction = "integrated.rpca", dims = 1:30,
+                    reduction.name = "integrated_UMAP")
+```
+
+
+```{r}
+# Compare before vs after integration
+p1 <- DimPlot(combined, reduction = "unintegrated_UMAP", group.by = "sample_id") + ggtitle("Unintegrated")
+p2 <- DimPlot(combined, reduction = "integrated_UMAP", group.by = "sample_id") + ggtitle("Integrated")
+p1 + p2
+DimPlot(combined, reduction = "integrated_UMAP", label = TRUE, repel = TRUE)
+```
+```{r}
+Acinar_cell_markers= c("PRSS1", "CTRB1", "CTRB2", "REG1B", "SPINK1","AMY2A")
+stellate_cells = c("RGS5", "ACTA2", "PDGFRB","ADIRF")
+ductal_cell = c("KRT19", "CFTR", "KRT7", "EPCAM", "SOX9")
+alpha_cell = c("GCG","LOXL4","DPP4","GC","FAP","GPR119")
+beta_cell = c("INS","IAPP","ADCYAP1","PDX1","MAFA","NKX6-1","MEG3")
+delta_cell = c("UNC5B","GABRB3","GABRG2","CASR","KCNJ2","FFAR4","GPR120")
+macrophage_marker = c("C1QA", "C1QB", "C1QC","APOE", "APOC1","CD68", "CD163", "MRC1", "CSF1R","ITGAM")
+mac.markers <- c("CD68", "CD14", "CSF1R", "LYZ", "AIF1", "C1QA", "C1QB","C1QC","TYROBP", "MSR1","MRC1")
+```
+
+
+```{r}
+# 6. Identify Macrophages
+# Human markers
+#FeaturePlot(combined, features = mac.markers, reduction = "integrated_UMAP", ncol = 3)
+DotPlot(combined, features = ductal_cell) + RotatedAxis()
+VlnPlot(combined, features = ductal_cell, pt.size = 0)
+```
+
